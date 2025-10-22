@@ -41,6 +41,7 @@ class GenerateResponse(BaseModel):
   """グループ名生成のレスポンスモデル"""
 
   names: List[str]
+  source: str = Field("AI", description="生成元を示す固定値。UI側でのバッジ表示用")
 
 
 @app.post("/generate", response_model=GenerateResponse)
@@ -86,7 +87,8 @@ async def generate_group_names(payload: GenerateRequest) -> GenerateResponse:
     for idx in range(len(candidates) + 1, payload.count + 1):
       candidates.append(f"追加候補{idx}")
 
-  return GenerateResponse(names=candidates[: payload.count])
+  # UIでバッジ表示に利用できるよう source を付加
+  return GenerateResponse(names=candidates[: payload.count], source="AI")
 
 
 @app.get("/")
@@ -94,3 +96,11 @@ async def root() -> dict[str, str]:
   """ヘルスチェック用の簡単なエンドポイント"""
 
   return {"message": "LINEグループ名メーカーAPIは稼働中です"}
+
+
+@app.get("/health")
+async def health() -> dict[str, bool]:
+  """フロントエンド向けのAI利用可否を返すエンドポイント"""
+
+  ai_enabled = bool(os.environ.get("OPENAI_API_KEY"))
+  return {"ai_enabled": ai_enabled}
