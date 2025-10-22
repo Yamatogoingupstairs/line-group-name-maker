@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LINEグループ名メーカー</title>
+    <!-- Google Fonts - M PLUS Rounded 1c -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="gradient-bg" aria-hidden="true"></div>
+    <main class="app-container">
+      <header class="hero">
+        <h1>LINEグループ名メーカー</h1>
+        <p>
+          キーワードや雰囲気を入れるだけで、ぴったりのグループ名を提案します。
+          AIとランダムの2モードを直感的に使い分けましょう♪
+        </p>
+      </header>
+
+      <section class="mode-area" aria-label="生成モードの切り替え">
+        <div class="mode-tabs" role="tablist" aria-label="生成モード">
+          <button
+            id="tab-ai"
+            class="mode-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="mode-panel"
+            data-mode="ai"
+          >
+            🤖 AI生成
+          </button>
+          <button
+            id="tab-random"
+            class="mode-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="mode-panel"
+            data-mode="random"
+          >
+            🎲 ランダム生成
+          </button>
+        </div>
+        <div id="mode-description" class="mode-description" aria-live="polite">
+          <p data-mode="ai">AI生成：入力に合わせてAIが自然な日本語の名前を考えます。</p>
+          <p data-mode="random">ランダム生成：内蔵ワードをシャッフルして高速に候補を作ります。</p>
+        </div>
+        <div
+          id="ai-disabled-banner"
+          class="info-banner hidden"
+          role="alert"
+          aria-live="assertive"
+        >
+          <span>AIはAPIキー設定が必要です。</span>
+          <button type="button" id="open-settings-btn" class="link-button">
+            設定する
+          </button>
+        </div>
+      </section>
+
+      <section
+        id="mode-panel"
+        class="controls"
+        aria-labelledby="tab-ai tab-random"
+      >
+        <form id="generator-form" autocomplete="off">
+          <label for="keywords">キーワード・雰囲気</label>
+          <input
+            type="text"
+            id="keywords"
+            name="keywords"
+            placeholder="例：部活 友情 ネタ"
+            required
+          />
+
+          <label for="category">カテゴリ</label>
+          <select id="category" name="category">
+            <option value="trendy">おしゃれ系</option>
+            <option value="cute">かわいい系</option>
+            <option value="funny">ネタ系</option>
+            <option value="cool">クール系</option>
+            <option value="warm">ほっこり系</option>
+          </select>
+
+          <div class="compare-row">
+            <label class="compare-toggle">
+              <input type="checkbox" id="compare-toggle" />
+              <span class="toggle-visual" aria-hidden="true"></span>
+              <span>比較モード（AIとランダムを同時に表示）</span>
+            </label>
+            <p class="compare-hint">
+              同じ入力でAIとランダムの違いを左右で見比べられます。
+            </p>
+          </div>
+
+          <button type="submit" id="generate-btn" class="generate-btn">
+            生成する
+          </button>
+        </form>
+
+        <button id="regenerate" class="regenerate-btn" disabled>
+          もう一度生成
+        </button>
+      </section>
+
+      <section id="results" class="results" aria-live="polite"></section>
+    </main>
+
+    <footer class="footer">LINEグループ名メーカー ©2025</footer>
+
+    <template id="result-card-template">
+      <article class="result-card">
+        <span class="result-badge" aria-hidden="true"></span>
+        <p class="group-name"></p>
+        <button class="copy-btn" type="button">コピー</button>
+      </article>
+    </template>
+
+    <div
+      id="tutorial-overlay"
+      class="tutorial-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tutorial-title"
+    >
+      <div class="tutorial-content">
+        <h2 id="tutorial-title">はじめての使い方</h2>
+        <ol class="tutorial-steps">
+          <li>
+            <strong>モードを選択</strong>：上部タブでAI/ランダムを切り替え。
+          </li>
+          <li>
+            <strong>キーワードを入力</strong>：雰囲気やワードを自由に入れてね。
+          </li>
+          <li>
+            <strong>生成ボタン</strong>：結果カードからコピーもワンタップ！
+          </li>
+        </ol>
+        <div class="tutorial-actions">
+          <button type="button" id="tutorial-next" class="primary-btn">
+            さっそく使う
+          </button>
+          <button type="button" id="tutorial-skip" class="secondary-btn">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="settings-modal"
+      class="settings-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
+      <div class="settings-content">
+        <h2 id="settings-title">OpenAI APIキー設定</h2>
+        <p>
+          AI生成を使うには、バックエンドにOpenAI APIキーを設定してください。
+          ここではメモとして保存できます。
+        </p>
+        <label for="api-key-input">APIキー</label>
+        <input
+          type="password"
+          id="api-key-input"
+          autocomplete="off"
+          placeholder="sk-..."
+        />
+        <div class="settings-actions">
+          <button type="button" id="save-api-key" class="primary-btn">
+            保存
+          </button>
+          <button type="button" id="close-settings" class="secondary-btn">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="toast-container"
+      class="toast-container"
+      aria-live="assertive"
+      aria-atomic="true"
+    ></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
